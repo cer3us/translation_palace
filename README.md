@@ -72,34 +72,38 @@ npm run dev     # for development
 ```
 ---
 
-⚙️ Configuration
+## ⚙️ Configuration
+
 All important settings are in the `config/ directory`:
-`translation.php` – languages, LLM model, embedding model, vector threshold.
-`palace.php` – available domains, wings, rooms, and tags.
-Edit these files to match your workflow and the languages you translate between.
+- `translation.php` – languages, LLM model, embedding model, vector threshold.
+- `palace.php` – available domains, wings, rooms, and tags.
+- Edit these files to match your workflow and the languages you translate between.
 ---
 
-🧠 How the Memory Palace Works
-Glossary Atrium – Exact term matches (e.g., “middleware” → “промежуточный слой” in a Laravel context).
+## 🧠 How the Memory Palace Works
 
-Idiom Gallery – Vector search over your previously translated sentences (few‑shot examples).
+- Glossary Atrium – Exact term matches (e.g., “middleware” → “промежуточный слой” in a Laravel context).
 
-Difficult Cases Library – Stored patterns with explanations (e.g., “it hit the fan” → “всё пошло наперекосяк”).
+- Idiom Gallery – Vector search over your previously translated sentences (few‑shot examples).
 
-Vector Threshold – Only memories with a cosine similarity better than the configured threshold are used (default 0.4).
+- Difficult Cases Library – Stored patterns with explanations (e.g., “it hit the fan” → “всё пошло наперекосяк”).
 
-This ensures that even a small local model (2‑4B parameters) produces high‑quality, style‑consistent translations.
+- Vector Threshold – Only memories with a cosine similarity better than the configured threshold are used (default 0.4).
+
+- This ensures that even a small local model (2‑4B parameters) produces high‑quality, style‑consistent translations.
 ---
 
-🤝 Acknowledgements
-- [MemPalace]{https://github.com/mempalace/mempalace} for the memory‑palace inspiration.
-- [Laravel](https://laravel.com/) and [Livewire](https://livewire.laravel.com/) for the developer experience.
-- [Prism](https://prismphp.com/) for a unified Laravel LLM interface.
-- [PGVector](https://github.com/pgvector/pgvector) for bringing vectors to PostgreSQL.
-- [Ollama](https://ollama.com/) for making llms accessible to the crowd.
+## 🤝 Acknowledgements
+
+- [`MemPalace`](https://github.com/mempalace/mempalace) for the memory‑palace inspiration.
+- [`Laravel`](https://laravel.com/) and [`Livewire`](https://livewire.laravel.com/) for the developer experience.
+- [`Prism`](https://prismphp.com/) for a unified Laravel LLM interface.
+- [`PGVector`](https://github.com/pgvector/pgvector) for bringing vectors to PostgreSQL.
+- [`Ollama`](https://ollama.com/) for making llms accessible to the crowd.
 ---
 
-📄 License
+## 📄 License
+
 This project is open‑sourced under the MIT license.
 ---
 
