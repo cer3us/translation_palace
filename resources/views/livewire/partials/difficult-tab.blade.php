@@ -11,6 +11,7 @@
             <th class="border px-4 py-2">Target Translation</th>
             <th class="border px-4 py-2">Lang</th>
             <th class="border px-4 py-2">Tags</th>
+            <th class="border px-4 py-2">Explanation</th>
             <th class="border px-4 py-2">Actions</th>
         </tr>
     </thead>
@@ -24,6 +25,11 @@
                     @foreach ($case->tags ?? [] as $tag)
                         <span class="inline-block bg-dark-surface rounded px-2 py-1 text-xs">{{ $tag }}</span>
                     @endforeach
+                </td>
+                <td class="border px-4 py-2">
+                    <span class="truncate max-w-[200px] block" title="{{ $case->explanation }}">
+                        {{ $case->explanation ? Str::limit($case->explanation, 60) : '—' }}
+                    </span>
                 </td>
                 <td class="border px-4 py-2 whitespace-nowrap">
                     <button wire:click="editDifficultCase({{ $case->id }})" class="text-accent hover:underline">Edit</button>

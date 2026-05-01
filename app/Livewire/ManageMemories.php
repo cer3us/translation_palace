@@ -62,6 +62,7 @@ class ManageMemories extends Component
     public $viewingFullText = false;
     public $viewingSource = '';
     public $viewingTranslation = '';
+    public $viewingExplanation = ''; //for difficult cases only
 
     // --- Search feature ---
     public $search = '';
@@ -180,6 +181,7 @@ class ManageMemories extends Component
         $case = DifficultCase::findOrFail($caseId);
         $this->viewingSource = $case->source_phrase;
         $this->viewingTranslation = $case->target_translation;
+        $this->viewingExplanation = $case->explanation ?? ''; 
         $this->viewingFullText = true;
     }
 
@@ -200,6 +202,7 @@ class ManageMemories extends Component
         $this->viewingFullText = false;
         $this->viewingSource = '';
         $this->viewingTranslation = '';
+        $this->viewingExplanation = ''; 
     }
 
     // ----------------------------------------------------------
@@ -272,6 +275,15 @@ class ManageMemories extends Component
             'glossaryTargetLang' => 'required',
         ]);
 
+        // Decode JSON if it looks like JSON, otherwise use an empty array
+        $contextPriority = $this->glossaryContextPriority;
+        if (is_string($contextPriority)) {
+            $decoded = json_decode($contextPriority, true);
+            $contextPriority = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : null;
+        } elseif (!is_array($contextPriority) && !is_null($contextPriority)) {
+            $contextPriority = null;
+        }
+
         Glossary::updateOrCreate(
             [
                 'id'          => $this->editingGlossaryId,
@@ -281,7 +293,7 @@ class ManageMemories extends Component
                 'translation'      => $this->glossaryTranslation,
                 'source_lang'      => $this->glossarySourceLang,
                 'target_lang'      => $this->glossaryTargetLang,
-                'context_priority' => json_decode($this->glossaryContextPriority, true) ?: null,
+                'context_priority' => $contextPriority,
                 'context_tag'      => $this->glossaryDomain ?: null,
                 'metadata'         => array_filter([
                     'domain' => $this->glossaryDomain,
@@ -320,7 +332,10 @@ class ManageMemories extends Component
         $this->difficultExplanation = $entry->explanation ?? '';
         $this->difficultSourceLang = $entry->source_lang;
         $this->difficultTargetLang = $entry->target_lang;
-        $this->difficultTags = $entry->tags ?? [];
+        
+        // Convert array to comma-separated string
+        $this->difficultTags = implode(', ', $entry->tags ?? []);
+
         $this->difficultDomain = $entry->metadata['domain'] ?? '';
         $this->difficultWing = $entry->metadata['wing'] ?? '';
         $this->difficultRoom = $entry->metadata['room'] ?? '';
@@ -334,6 +349,13 @@ class ManageMemories extends Component
             'difficultTargetTranslation'  => 'required|string',
         ]);
 
+        // Convert tags string to array (split by comma, trim, remove empty)
+        $tagsArray = collect(explode(',', $this->difficultTags ?? ''))
+            ->map(fn($tag) => trim($tag))
+            ->filter()
+            ->values()
+            ->toArray();
+
         DifficultCase::updateOrCreate(
             ['id' => $this->editingDifficultId],
             [
@@ -342,7 +364,7 @@ class ManageMemories extends Component
                 'explanation'        => $this->difficultExplanation,
                 'source_lang'        => $this->difficultSourceLang,
                 'target_lang'        => $this->difficultTargetLang,
-                'tags'               => $this->difficultTags,
+                'tags'               => $tagsArray,
                 'metadata'           => array_filter([
                     'domain' => $this->difficultDomain,
                     'wing'   => $this->difficultWing,

@@ -3,9 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Pgvector\Laravel\HasNeighbors;
+use Pgvector\Laravel\Vector;
+
 
 class DifficultCase extends Model
 {
+    use HasNeighbors;
+
     protected $table = 'difficult_cases';
 
     protected $fillable = [
@@ -15,10 +20,13 @@ class DifficultCase extends Model
         'tags',
         'target_lang',
         'source_lang',
-        'metadata'
+        'metadata',
+        'embedding'
     ];
 
     protected $casts = [
-        'tags' => 'array',    // jsonb → PHP array
+        'embedding' => Vector::class,
+        'tags' => 'array',    // jsonb → PHP array'
+        'metadata' => 'array',
     ];
 }

@@ -3,9 +3,13 @@
 return [
     'domains' => [
         'tech'     => 'Tech',
+        'law'      => 'Law',
+        'business' => 'Business',
+        'science'  => 'Science',
         'gaming'   => 'Gaming',
         'medical'  => 'Medical',
         'everyday' => 'Everyday',
+        'philosophy' => 'Philosophy',
     ],
 
     'wings' => [
@@ -20,6 +24,12 @@ return [
         'gaming' => [
             'minecraft' => 'Minecraft',
             'csgo'      => 'CS:GO',
+        ],
+        'law' => [
+            'misc'   => 'Miscellaneous',
+        ],
+        'science' => [
+            'misc'   => 'Miscellaneous',
         ],
         // ... add as needed
     ],

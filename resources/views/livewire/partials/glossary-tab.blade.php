@@ -19,10 +19,15 @@
             <td class="border px-4 py-2">{{ $entry->translation }}</td>
             <td class="border px-4 py-2">{{ $entry->source_lang }} → {{ $entry->target_lang }}</td>
             <td class="border px-4 py-2">
-                @if(!empty($entry->context_priority))
-                    @foreach ($entry->context_priority as $tag => $trans)
+                @php
+                    $priority = $entry->context_priority;
+                @endphp
+                @if(is_array($priority) && count($priority))
+                    @foreach ($priority as $tag => $trans)
                         <span class="text-xs bg-dark-surface px-1">{{ $tag }}: {{ $trans }}</span>
                     @endforeach
+                @else
+                    <span class="text-gray-400">—</span>
                 @endif
             </td>
             <td class="flex items-center justify-center border px-4 py-2 whitespace-nowrap">

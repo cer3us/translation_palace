@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Now create the HNSW index manually
+        // HNSW index for embeddings 
         DB::statement('CREATE INDEX idx_memory_embedding ON translations_memory USING hnsw (embedding vector_cosine_ops)');
 
         // Partial index for approved (gold) memories

@@ -33,25 +33,39 @@
         @include('livewire.partials.memory-tab')
     @endif
 
-    <!-- Full-text viewer model -->
     @if ($viewingFullText)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        x-data>
         <div class="bg-dark-surface p-6 rounded shadow-lg w-full max-w-2xl">
             <h3 class="text-lg font-semibold mb-4">Full Text</h3>
             <div class="space-y-4">
+                <!-- Source Text -->
                 <div>
                     <p class="text-sm font-bold mb-1">Source Text</p>
                     <div class="bg-dark-bg p-3 rounded break-words" x-ref="source">{{ $viewingSource }}</div>
                     <button @click="navigator.clipboard.writeText($refs.source.innerText)"
-                        class="mt-1 text-xs text-accent hover:underline">Copy</button>
-                </div>
-                <div>
-                    <p class="text-sm font-bold mb-1">Translated Text</p>
-                    <div class="bg-dark-bg p-3 rounded break-words">{{ $viewingTranslation }}</div>
-                    <button onclick="navigator.clipboard.writeText('{{ addslashes($viewingTranslation) }}')"
                             class="mt-1 text-xs text-accent hover:underline">Copy</button>
                 </div>
+
+                <!-- Translated Text -->
+                <div>
+                    <p class="text-sm font-bold mb-1">Translated Text</p>
+                    <div class="bg-dark-bg p-3 rounded break-words" x-ref="translation">{{ $viewingTranslation }}</div>
+                    <button @click="navigator.clipboard.writeText($refs.translation.innerText)"
+                            class="mt-1 text-xs text-accent hover:underline">Copy</button>
+                </div>
+
+                <!-- Explanation (only for Difficult Cases) -->
+                @if (!empty($viewingExplanation))
+                <div>
+                    <p class="text-sm font-bold mb-1">Explanation</p>
+                    <div class="bg-dark-bg p-3 rounded break-words" x-ref="explanation">{{ $viewingExplanation }}</div>
+                    <button @click="navigator.clipboard.writeText($refs.explanation.innerText)"
+                            class="mt-1 text-xs text-accent hover:underline">Copy</button>
+                </div>
+                @endif
             </div>
+
             <div class="mt-4 flex justify-end">
                 <button wire:click="closeFullText" class="bg-dark-bg hover:bg-black text-white px-4 py-2 rounded">
                     Close
@@ -60,4 +74,5 @@
         </div>
     </div>
     @endif
+    
 </div>

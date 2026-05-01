@@ -203,32 +203,33 @@ class TranslationPalaceService
         ?string $domain,
         ?string $wing,
         ?string $room,
-        ?string $hall
+        ?string $hall,
+        int $limit = 5,
+        ?float $threshold = null
     ): array {
+        $embedding = $this->embeddingService->generate($text);
+        $vector = new Vector($embedding);
+
         $query = DifficultCase::query()
+            ->nearestNeighbors('embedding', $vector, Distance::Cosine)
             ->where('source_lang', $sourceLang)
             ->where('target_lang', $targetLang);
 
+        // Apply similarity threshold
+        $threshold = $threshold ?? config('translation.vector_threshold', 0.4);
+        if ($threshold !== null) {
+            $vectorJson = json_encode($vector->toArray());
+            $query->whereRaw('embedding <=> ? < ?', [$vectorJson, $threshold]);
+        }
+
         $this->applyPalaceFilters($query, $domain, $wing, $room, $hall);
 
-        // Still also check tags if a domain/context tag is passed
-        if ($domain) {
-            // Add a tag fallback: if the domain also appears as a tag
-            $query->orWhereJsonContains('tags', $domain);
-        }
-
-        // Keyword search on source_phrase
-        $words = $this->extractKeywords($text);
-        if (!empty($words)) {
-            $query->where(function ($q) use ($words) {
-                foreach ($words as $word) {
-                    $q->orWhere('source_phrase', 'ilike', "%{$word}%");
-                }
-            });
-        }
-
-        return $query->get()
-            ->map(fn($case) => $case->explanation ?? "Case: {$case->source_phrase} → {$case->target_translation}")
+        return $query->take($limit)->get()
+            ->map(fn($case) => [
+                'source'      => $case->source_phrase,
+                'target'      => $case->target_translation,
+                'explanation' => $case->explanation,
+            ])
             ->toArray();
     }
 
@@ -238,23 +239,18 @@ class TranslationPalaceService
     private function applyPalaceFilters($query, ?string $domain, ?string $wing, ?string $room, ?string $hall): void
     {
         if ($domain) {
-            $query->whereJsonContains('metadata->domain', $domain);
+            $query->where('metadata->domain', $domain);
         }
         if ($wing) {
-            $query->whereJsonContains('metadata->wing', $wing);
+            $query->where('metadata->wing', $wing);
         }
         if ($room) {
-            $query->whereJsonContains('metadata->room', $room);
+            $query->where('metadata->room', $room);
         }
         if ($hall) {
-            $query->whereJsonContains('metadata->hall', $hall);
+            $query->where('metadata->hall', $hall);
         }
     }
-
-    // ----------------------------------------------------------------
-    // The rest of the methods (assemblePrompt, extractKeywords, etc.)
-    // remain identical to your previous version.
-    // ----------------------------------------------------------------
 
     protected function assemblePrompt(
         string $text,
@@ -281,9 +277,14 @@ class TranslationPalaceService
         }
 
         if (!empty($difficultHints)) {
-            $prompt .= "\n[STYLE NOTES]\n";
+            $prompt .= "\n[TRICKY PHRASES]\n";
             foreach ($difficultHints as $hint) {
-                $prompt .= "- {$hint}\n";
+                $prompt .= "- Source: {$hint['source']}\n";
+                $prompt .= "  Translation: {$hint['target']}\n";
+                if (!empty($hint['explanation'])) {
+                    $prompt .= "  Note: {$hint['explanation']}\n";
+                }
+                $prompt .= "\n";
             }
         }
 
@@ -386,5 +387,12 @@ class TranslationPalaceService
                 'metadata'           => $metadata,
             ])
         );
+        // Generate embedding for the source phrase
+        $embedding = $this->embeddingService->generate($sourcePhrase);
+        DifficultCase::where('source_phrase', $sourcePhrase)
+            ->where('source_lang', $sourceLang)
+            ->where('target_lang', $targetLang)
+            ->update(['embedding' => new Vector($embedding)]);
     }
+
 }

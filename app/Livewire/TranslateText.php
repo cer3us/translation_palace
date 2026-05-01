@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Glossary;
 use Livewire\Component;
 use App\Services\TranslationPalaceService;
 use App\Services\EmbeddingService;
@@ -29,6 +30,16 @@ class TranslateText extends Component
     // Options
     public $autoApprove = false;     // if true, automatically store as gold memory
     public $saveToMemory = false;    // store as a memory (not gold)
+
+    // Extraction modals
+    public $showExtractGlossaryModal = false;
+    public $extractGlossaryTerm = '';
+    public $extractGlossaryTranslation = '';
+
+    public $showExtractDifficultModal = false;
+    public $extractDifficultPhrase = '';
+    public $extractDifficultTranslation = '';
+    public $extractDifficultExplanation = '';
 
     protected $rules = [
         'sourceText' => 'required|string|min:2|max:12000',
@@ -169,5 +180,83 @@ class TranslateText extends Component
 
         $this->originalTranslation = $this->translatedText;
         session()->flash('message', 'Translation accepted and saved as gold.');
+    }
+
+    // Open glossary extraction modal, pre‑filled from current translation
+    public function openExtractGlossary()
+    {
+        $this->extractGlossaryTerm = $this->sourceText;
+        $this->extractGlossaryTranslation = $this->translatedText;
+        $this->showExtractGlossaryModal = true;
+    }
+
+    // Open difficult case extraction modal
+    public function openExtractDifficultCases()
+    {
+        $this->extractDifficultPhrase = $this->sourceText;
+        $this->extractDifficultTranslation = $this->translatedText;
+        $this->extractDifficultExplanation = '';
+        $this->showExtractDifficultModal = true;
+    }
+
+    // Save extracted glossary term
+    public function saveExtractedGlossary(TranslationPalaceService $palace)
+    {
+        $this->validate([
+            'extractGlossaryTerm'        => 'required|string',
+            'extractGlossaryTranslation' => 'required|string',
+        ]);
+
+        $existing = Glossary::where('term', $this->extractGlossaryTerm)
+            ->where('source_lang', $this->sourceLang)
+            ->where('target_lang', $this->targetLang)
+            ->first();
+
+        $newPriority = $existing ? ($existing->context_priority ?? []) : [];
+        if ($this->domain) {
+            $newPriority[$this->domain] = $this->extractGlossaryTranslation;
+        }
+
+        $palace->storeGlossaryTerm(
+            term: $this->extractGlossaryTerm,
+            translation: $this->extractGlossaryTranslation,
+            sourceLang: $this->sourceLang,
+            targetLang: $this->targetLang,
+            contextPriority: $newPriority,
+            metadata: array_filter([
+                'domain' => $this->domain,
+                'wing'   => $this->wing,
+                'room'   => $this->room,
+            ]),
+        );
+
+        $this->showExtractGlossaryModal = false;
+        session()->flash('message', 'Term added to glossary!');
+    }
+
+    // Save extracted difficult case
+    public function saveExtractedDifficultCase(TranslationPalaceService $palace)
+    {
+        $this->validate([
+            'extractDifficultPhrase'      => 'required|string',
+            'extractDifficultTranslation' => 'required|string',
+        ]);
+
+        $palace->storeDifficultCase(
+            sourcePhrase: $this->extractDifficultPhrase,
+            targetTranslation: $this->extractDifficultTranslation,
+            sourceLang: $this->sourceLang,
+            targetLang: $this->targetLang,
+            explanation: $this->extractDifficultExplanation,
+            tags: $this->domain ? [$this->domain] : [],
+            metadata: array_filter([
+                'domain' => $this->domain,
+                'wing'   => $this->wing,
+                'room'   => $this->room,
+            ])
+        );
+
+        $this->showExtractDifficultModal = false;
+        session()->flash('message', 'Difficult case saved!');
     }
 }

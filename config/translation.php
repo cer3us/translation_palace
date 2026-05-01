@@ -10,7 +10,7 @@ return [
     'default_source' => 'en',
     'default_target' => 'ru',
     
-    'vector_threshold' => env('VECTOR_THRESHOLD', 0.4),
+    'vector_threshold' => env('VECTOR_THRESHOLD', 0.44),
 
     'model' => env('TRANSLATION_MODEL', 'qwen2.5-coder:3b'),
     'embedding_model' => env('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text'),
